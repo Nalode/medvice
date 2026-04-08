@@ -1,8 +1,10 @@
+import { useEffect, useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
-import { ArrowLeft, Star, MessageSquare, ChevronRight } from 'lucide-react';
+import { ArrowLeft, Star, MessageSquare, ChevronRight, Loader2 } from 'lucide-react';
 import DNABackground from '../components/DNABackground';
-import { hospitalsData, testimonialsData, servicesData } from '../data/mockData';
+import { supabase } from '../lib/supabase';
+import type { Hospital, HospitalService, Testimonial } from '../types/database';
 
 // Re-using Icon mapping for consistency
 const getIconUrl = (name: string) => {
@@ -48,7 +50,50 @@ export default function HospitalDetails() {
   const { hospitalId } = useParams();
   const navigate = useNavigate();
 
-  const hospital = hospitalsData.find(h => h.id === hospitalId);
+  const [hospital, setHospital] = useState<Hospital | null>(null);
+  const [services, setServices] = useState<HospitalService[]>([]);
+  const [testimonials, setTestimonials] = useState<Testimonial[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    async function fetchData() {
+      if (!hospitalId) return;
+      
+      try {
+        setLoading(true);
+        
+        // Parallel fetching
+        const [hRes, sRes, tRes] = await Promise.all([
+          supabase.from('hospitals').select('*').eq('id', hospitalId).single(),
+          supabase.from('hospital_services').select('*').eq('hospitalId', hospitalId),
+          supabase.from('testimonials').select('*').eq('hospital_id', hospitalId)
+        ]);
+
+        if (hRes.error) throw hRes.error;
+        if (sRes.error) throw sRes.error;
+        if (tRes.error) throw tRes.error;
+
+        setHospital(hRes.data);
+        setServices(sRes.data || []);
+        setTestimonials(tRes.data || []);
+      } catch (err) {
+        console.error('Error fetching data:', err);
+      } finally {
+        setLoading(false);
+      }
+    }
+
+    fetchData();
+  }, [hospitalId]);
+
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-[#0B132B] flex flex-col items-center justify-center text-white">
+        <Loader2 className="w-12 h-12 text-brand-cyan animate-spin mb-4" />
+        <p className="text-slate-400 font-medium">Chargement des détails hospitaliers...</p>
+      </div>
+    );
+  }
 
   if (!hospital) {
     return (
@@ -60,16 +105,13 @@ export default function HospitalDetails() {
   }
 
   // Dashboard Data Aggregation
-  const hospitalReviews = testimonialsData.filter(t => t.hospitalName === hospital.name);
-  const avgRating = hospitalReviews.length > 0 
-      ? (hospitalReviews.reduce((acc, curr) => acc + curr.rating, 0) / hospitalReviews.length).toFixed(1)
+  const avgRating = testimonials.length > 0 
+      ? (testimonials.reduce((acc, curr) => acc + curr.rating, 0) / testimonials.length).toFixed(1)
       : '0.0';
 
-  const localServices = servicesData.filter(s => s.hospitalId === hospital.id);
-
-  const medCount = localServices.filter(s => s.type === 'medical').length;
-  const surgCount = localServices.filter(s => s.type === 'surgical').length;
-  const bioCount = localServices.filter(s => s.type === 'biological').length;
+  const medCount = services.filter(s => s.type === 'medical').length;
+  const surgCount = services.filter(s => s.type === 'surgical').length;
+  const bioCount = services.filter(s => s.type === 'biological').length;
   const totalSpecs = medCount + surgCount + bioCount;
 
   return (
@@ -140,7 +182,7 @@ export default function HospitalDetails() {
                    />
                 ))}
               </div>
-              <span className="text-xs font-semibold text-gray-500">{hospitalReviews.length} témoignages vérifiés</span>
+              <span className="text-xs font-semibold text-gray-500">{testimonials.length} témoignages vérifiés</span>
             </div>
 
             {/* Metrics */}
@@ -196,10 +238,10 @@ export default function HospitalDetails() {
           <h2 className="text-2xl font-serif font-bold text-[#0B132B] mb-6">Répertoire des Services</h2>
           
           <div className="flex flex-col space-y-3">
-            {localServices.map((sp, i) => {
+            {services.map((sp, i) => {
               if (!sp) return null;
               
-              const spReviews = hospitalReviews.filter(r => r.serviceName === sp.serviceName);
+              const spReviews = testimonials.filter(r => r.serviceName === sp.serviceName);
 
               return (
                 <motion.div
@@ -256,3 +298,4 @@ export default function HospitalDetails() {
     </div>
   );
 }
+

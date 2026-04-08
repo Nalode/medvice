@@ -1,8 +1,9 @@
-import { useState, useMemo, useEffect, useRef } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
-import { ArrowLeft, Star, ChevronLeft, ChevronRight, User, MapPin, Building, ChevronDown, Activity } from 'lucide-react';
-import { testimonialsData, hospitalsData, specialtiesData } from '../data/mockData';
+import { ArrowLeft, Star, ChevronLeft, ChevronRight, User, MapPin, Building, ChevronDown, Activity, Loader2 } from 'lucide-react';
+import { supabase } from '../lib/supabase';
+import type { Testimonial, Hospital, Specialty } from '../types/database';
 import FloatingParticles from '../components/FloatingParticles';
 
 // Re-using Icon mapping for consistency inside the card
@@ -36,6 +37,12 @@ export default function TestimonialsPage() {
   const [currentIndex, setCurrentIndex] = useState(0);
   const [direction, setDirection] = useState(0); // 1 = right, -1 = left
   
+  // Data States
+  const [testimonials, setTestimonials] = useState<Testimonial[]>([]);
+  const [hospitals, setHospitals] = useState<Hospital[]>([]);
+  const [specialties, setSpecialties] = useState<Specialty[]>([]);
+  const [loading, setLoading] = useState(true);
+
   // Custom Fast Travel Dropdown State
   const [showFastTravel, setShowFastTravel] = useState(false);
   const dropdownRef = useRef<HTMLDivElement>(null);
@@ -55,26 +62,51 @@ export default function TestimonialsPage() {
   const isGlobalMode = !!specialtyName;
   const decodeSpecialty = specialtyName ? decodeURIComponent(specialtyName) : "";
   const decodeService = serviceName ? decodeURIComponent(serviceName) : "";
-  
-  const hospital = hospitalId ? hospitalsData.find(h => h.id === hospitalId) : null;
 
-  // Filter Data Strictly Based on Entry Point Context
-  const filteredTestimonials = useMemo(() => {
-    if (isGlobalMode) {
-      // Entry Point A: All testimonials globally for this specialty name
-      return testimonialsData.filter(t => t.serviceName.toLowerCase() === decodeSpecialty.toLowerCase());
-    } else if (hospital && decodeService) {
-      // Entry Point B: Specific Hospital + Specific Service
-      return testimonialsData.filter(t => 
-        t.hospitalName === hospital.name && 
-        t.serviceName.toLowerCase() === decodeService.toLowerCase()
-      );
+  useEffect(() => {
+    async function fetchData() {
+      try {
+        setLoading(true);
+        
+        // Fetch specialties for dropdown and hospitals for lookup
+        const [specRes, hospRes] = await Promise.all([
+          supabase.from('specialties').select('*'),
+          supabase.from('hospitals').select('*')
+        ]);
+
+        if (specRes.error) throw specRes.error;
+        if (hospRes.error) throw hospRes.error;
+
+        setSpecialties(specRes.data || []);
+        setHospitals(hospRes.data || []);
+
+        // Fetch filtered testimonials
+        let query = supabase.from('testimonials').select('*');
+
+        if (isGlobalMode) {
+          query = query.ilike('serviceName', decodeSpecialty);
+        } else if (hospitalId && decodeService) {
+          query = query.eq('hospital_id', hospitalId).ilike('serviceName', decodeService);
+        }
+
+        const { data: tData, error: tErr } = await query;
+        if (tErr) throw tErr;
+
+        setTestimonials(tData || []);
+        setCurrentIndex(0);
+      } catch (err) {
+        console.error('Error fetching testimonials data:', err);
+      } finally {
+        setLoading(false);
+      }
     }
-    return [];
-  }, [isGlobalMode, decodeSpecialty, hospital, decodeService]);
 
+    fetchData();
+  }, [isGlobalMode, decodeSpecialty, hospitalId, decodeService]);
+
+  const currentHospital = hospitalId ? hospitals.find(h => h.id === hospitalId) : null;
   const activeModeTitle = isGlobalMode ? decodeSpecialty : decodeService;
-  const backText = isGlobalMode ? "Retour aux spécialités" : `Retour au ${hospital?.name || 'CHU'}`;
+  const backText = isGlobalMode ? "Retour aux spécialités" : `Retour au ${currentHospital?.name || 'CHU'}`;
   const backRoute = isGlobalMode ? '/' : `/hospital/${hospitalId}`;
 
   // Framer Motion Carousel Variants
@@ -89,16 +121,27 @@ export default function TestimonialsPage() {
   };
 
   const nextTestimonial = () => {
+    if (testimonials.length === 0) return;
     setDirection(1);
-    setCurrentIndex((prev) => (prev + 1) % filteredTestimonials.length);
+    setCurrentIndex((prev) => (prev + 1) % testimonials.length);
   };
 
   const prevTestimonial = () => {
+    if (testimonials.length === 0) return;
     setDirection(-1);
-    setCurrentIndex((prev) => (prev === 0 ? filteredTestimonials.length - 1 : prev - 1));
+    setCurrentIndex((prev) => (prev === 0 ? testimonials.length - 1 : prev - 1));
   };
 
-  const currentTestimonial = filteredTestimonials[currentIndex];
+  const currentTestimonial = testimonials[currentIndex];
+
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-[#0B132B] flex flex-col items-center justify-center text-white">
+        <Loader2 className="w-12 h-12 text-brand-cyan animate-spin mb-4" />
+        <p className="text-slate-400 font-medium text-center px-4">Récupération des témoignages en cours...</p>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-[#0B132B] flex flex-col font-sans overflow-x-hidden pt-24 pb-16 relative">
@@ -152,7 +195,7 @@ export default function TestimonialsPage() {
                     <div className="px-4 py-3 bg-white/5 border-b border-white/10 text-xs font-bold text-slate-400 uppercase tracking-wider sticky top-0 backdrop-blur-md">
                       Toutes les Spécialités
                     </div>
-                    {specialtiesData.map(sp => (
+                    {specialties.map(sp => (
                       <button 
                         key={sp.id}
                         onClick={() => {
@@ -171,8 +214,8 @@ export default function TestimonialsPage() {
           </div>
         </div>
 
-        {/* Empty State / Loading */}
-        {filteredTestimonials.length === 0 ? (
+        {/* Empty State */}
+        {testimonials.length === 0 ? (
           <div className="flex-grow flex items-center justify-center min-h-[40vh] bg-white/5 backdrop-blur-xl border border-white/10 rounded-3xl">
             <div className="text-center">
               <Star className="w-12 h-12 text-slate-600 mx-auto mb-4" />
@@ -247,7 +290,7 @@ export default function TestimonialsPage() {
                           <div className="flex items-center space-x-2 text-slate-400">
                              <MapPin className="w-3.5 h-3.5" />
                              <span className="text-xs font-bold uppercase tracking-wider">
-                               {isGlobalMode ? hospitalsData.find(h => h.name === currentTestimonial.hospitalName)?.city + ", Algérie" : hospital?.city + ", Algérie"}
+                               { (hospitals.find(h => h.name === currentTestimonial.hospitalName)?.city || currentHospital?.city || "Algérie") + ", Algérie" }
                              </span>
                           </div>
                           
@@ -272,7 +315,7 @@ export default function TestimonialsPage() {
             {/* Bottom Dash Pagination Tracker */}
             <div className="mt-12 flex flex-col items-center justify-center space-y-4">
               <div className="flex space-x-2.5">
-                {filteredTestimonials.map((_, idx) => (
+                {testimonials.map((_, idx) => (
                   <button 
                     key={idx}
                     onClick={() => {
@@ -284,7 +327,7 @@ export default function TestimonialsPage() {
                 ))}
               </div>
               <div className="text-[0.65rem] font-bold tracking-[0.3em] uppercase text-slate-400">
-                {String(currentIndex + 1).padStart(2, '0')} / {String(filteredTestimonials.length).padStart(2, '0')} TÉMOIGNAGES
+                {String(currentIndex + 1).padStart(2, '0')} / {String(testimonials.length).padStart(2, '0')} TÉMOIGNAGES
               </div>
               
               {/* Mobile Only Controls */}
@@ -300,3 +343,4 @@ export default function TestimonialsPage() {
     </div>
   );
 }
+

@@ -1,12 +1,15 @@
 import { useState, useRef, useEffect } from 'react';
 import { Link } from 'react-router-dom';
-import { Menu, X, ChevronDown } from 'lucide-react';
-import { specialtiesData } from '../data/mockData';
+import { Menu, X, ChevronDown, Loader2 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
+import { supabase } from '../lib/supabase';
+import type { Specialty } from '../types/database';
 
 export default function NavBar() {
   const [isOpen, setIsOpen] = useState(false);
   const [openMega, setOpenMega] = useState<string | null>(null);
+  const [specialties, setSpecialties] = useState<Specialty[]>([]);
+  const [loading, setLoading] = useState(true);
   const megaMenuRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -19,6 +22,23 @@ export default function NavBar() {
     return () => {
       document.removeEventListener("mousedown", handleClickOutside);
     };
+  }, []);
+
+  useEffect(() => {
+    async function fetchSpecialties() {
+      try {
+        const { data, error } = await supabase
+          .from('specialties')
+          .select('*');
+        if (error) throw error;
+        setSpecialties(data || []);
+      } catch (err) {
+        console.error('Error fetching specialties for nav:', err);
+      } finally {
+        setLoading(false);
+      }
+    }
+    fetchSpecialties();
   }, []);
 
   const toggleMega = (menu: string) => {
@@ -53,32 +73,38 @@ export default function NavBar() {
                       transition={{ duration: 0.2 }}
                       className="absolute left-0 mt-2 w-screen max-w-4xl bg-white text-text-main shadow-xl rounded-b-lg overflow-hidden border-t-4 border-brand-cyan transform origin-top"
                     >
-                      <div className="grid grid-cols-1 md:grid-cols-3 gap-8 p-8 max-h-[70vh] overflow-y-auto">
-                        <div>
-                          <h3 className="font-serif font-bold text-lg mb-4 text-hero-bg border-b border-gray-100 pb-2">Médicales</h3>
-                          <ul className="space-y-2.5 text-sm text-gray-600">
-                            {specialtiesData.filter(s => s.type === 'medical').map(s => (
-                              <li key={s.id}><Link to={`/specialty/${encodeURIComponent(s.name)}`} onClick={() => setOpenMega(null)} className="hover:text-brand-cyan hover:pl-1 transition-all block">{s.name}</Link></li>
-                            ))}
-                          </ul>
+                      {loading ? (
+                        <div className="p-12 flex justify-center items-center">
+                           <Loader2 className="w-8 h-8 text-brand-cyan animate-spin" />
                         </div>
-                        <div>
-                          <h3 className="font-serif font-bold text-lg mb-4 text-hero-bg border-b border-gray-100 pb-2">Chirurgicales</h3>
-                          <ul className="space-y-2.5 text-sm text-gray-600">
-                            {specialtiesData.filter(s => s.type === 'surgical').map(s => (
-                              <li key={s.id}><Link to={`/specialty/${encodeURIComponent(s.name)}`} onClick={() => setOpenMega(null)} className="hover:text-brand-cyan hover:pl-1 transition-all block">{s.name}</Link></li>
-                            ))}
-                          </ul>
+                      ) : (
+                        <div className="grid grid-cols-1 md:grid-cols-3 gap-8 p-8 max-h-[70vh] overflow-y-auto">
+                          <div>
+                            <h3 className="font-serif font-bold text-lg mb-4 text-hero-bg border-b border-gray-100 pb-2">Médicales</h3>
+                            <ul className="space-y-2.5 text-sm text-gray-600">
+                              {specialties.filter(s => s.type === 'medical').map(s => (
+                                <li key={s.id}><Link to={`/specialty/${encodeURIComponent(s.name)}`} onClick={() => setOpenMega(null)} className="hover:text-brand-cyan hover:pl-1 transition-all block">{s.name}</Link></li>
+                              ))}
+                            </ul>
+                          </div>
+                          <div>
+                            <h3 className="font-serif font-bold text-lg mb-4 text-hero-bg border-b border-gray-100 pb-2">Chirurgicales</h3>
+                            <ul className="space-y-2.5 text-sm text-gray-600">
+                              {specialties.filter(s => s.type === 'surgical').map(s => (
+                                <li key={s.id}><Link to={`/specialty/${encodeURIComponent(s.name)}`} onClick={() => setOpenMega(null)} className="hover:text-brand-cyan hover:pl-1 transition-all block">{s.name}</Link></li>
+                              ))}
+                            </ul>
+                          </div>
+                          <div>
+                            <h3 className="font-serif font-bold text-lg mb-4 text-hero-bg border-b border-gray-100 pb-2">Biologiques</h3>
+                            <ul className="space-y-2.5 text-sm text-gray-600">
+                              {specialties.filter(s => s.type === 'biological').map(s => (
+                                <li key={s.id}><Link to={`/specialty/${encodeURIComponent(s.name)}`} onClick={() => setOpenMega(null)} className="hover:text-brand-cyan hover:pl-1 transition-all block">{s.name}</Link></li>
+                              ))}
+                            </ul>
+                          </div>
                         </div>
-                        <div>
-                          <h3 className="font-serif font-bold text-lg mb-4 text-hero-bg border-b border-gray-100 pb-2">Biologiques</h3>
-                          <ul className="space-y-2.5 text-sm text-gray-600">
-                            {specialtiesData.filter(s => s.type === 'biological').map(s => (
-                              <li key={s.id}><Link to={`/specialty/${encodeURIComponent(s.name)}`} onClick={() => setOpenMega(null)} className="hover:text-brand-cyan hover:pl-1 transition-all block">{s.name}</Link></li>
-                            ))}
-                          </ul>
-                        </div>
-                      </div>
+                      )}
                     </motion.div>
                   )}
                 </AnimatePresence>
@@ -110,30 +136,38 @@ export default function NavBar() {
               </button>
               {openMega === 'mobile-sp' && (
                 <div className="pl-4 mt-3 space-y-6 border-l-2 border-brand-cyan ml-2 max-h-[50vh] overflow-y-auto">
-                  <div>
-                    <div className="text-sm font-bold text-gray-300 mb-2">Médicales</div>
-                    <ul className="text-sm text-gray-400 space-y-2 pl-2">
-                       {specialtiesData.filter(s => s.type === 'medical').map(s => (
-                            <li key={s.id}><Link to={`/specialty/${encodeURIComponent(s.name)}`} onClick={() => setIsOpen(false)} className="hover:text-brand-cyan block">{s.name}</Link></li>
-                       ))}
-                    </ul>
-                  </div>
-                  <div>
-                    <div className="text-sm font-bold text-gray-300 mb-2">Chirurgicales</div>
-                    <ul className="text-sm text-gray-400 space-y-2 pl-2">
-                       {specialtiesData.filter(s => s.type === 'surgical').map(s => (
-                            <li key={s.id}><Link to={`/specialty/${encodeURIComponent(s.name)}`} onClick={() => setIsOpen(false)} className="hover:text-brand-cyan block">{s.name}</Link></li>
-                       ))}
-                    </ul>
-                  </div>
-                  <div>
-                    <div className="text-sm font-bold text-gray-300 mb-2">Biologiques</div>
-                    <ul className="text-sm text-gray-400 space-y-2 pl-2">
-                       {specialtiesData.filter(s => s.type === 'biological').map(s => (
-                            <li key={s.id}><Link to={`/specialty/${encodeURIComponent(s.name)}`} onClick={() => setIsOpen(false)} className="hover:text-brand-cyan block">{s.name}</Link></li>
-                       ))}
-                    </ul>
-                  </div>
+                  {loading ? (
+                    <div className="py-4 flex justify-center">
+                      <Loader2 className="w-6 h-6 text-brand-cyan animate-spin" />
+                    </div>
+                  ) : (
+                    <>
+                      <div>
+                        <div className="text-sm font-bold text-gray-300 mb-2">Médicales</div>
+                        <ul className="text-sm text-gray-400 space-y-2 pl-2">
+                           {specialties.filter(s => s.type === 'medical').map(s => (
+                                <li key={s.id}><Link to={`/specialty/${encodeURIComponent(s.name)}`} onClick={() => setIsOpen(false)} className="hover:text-brand-cyan block">{s.name}</Link></li>
+                           ))}
+                        </ul>
+                      </div>
+                      <div>
+                        <div className="text-sm font-bold text-gray-300 mb-2">Chirurgicales</div>
+                        <ul className="text-sm text-gray-400 space-y-2 pl-2">
+                           {specialties.filter(s => s.type === 'surgical').map(s => (
+                                <li key={s.id}><Link to={`/specialty/${encodeURIComponent(s.name)}`} onClick={() => setIsOpen(false)} className="hover:text-brand-cyan block">{s.name}</Link></li>
+                           ))}
+                        </ul>
+                      </div>
+                      <div>
+                        <div className="text-sm font-bold text-gray-300 mb-2">Biologiques</div>
+                        <ul className="text-sm text-gray-400 space-y-2 pl-2">
+                           {specialties.filter(s => s.type === 'biological').map(s => (
+                                <li key={s.id}><Link to={`/specialty/${encodeURIComponent(s.name)}`} onClick={() => setIsOpen(false)} className="hover:text-brand-cyan block">{s.name}</Link></li>
+                           ))}
+                        </ul>
+                      </div>
+                    </>
+                  )}
                 </div>
               )}
             </div>
@@ -144,3 +178,4 @@ export default function NavBar() {
     </nav>
   );
 }
+
