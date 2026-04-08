@@ -1,0 +1,20 @@
+@import "tailwindcss";
+
+@theme {
+  --color-hero-bg: #0B132B;
+  --color-hero-bg-end: #1C2541;
+  --color-brand-blue: #3A86FF;
+  --color-brand-cyan: #80FFDB;
+  --color-content-bg: #F8FAFC;
+  --color-card-bg: #FFFFFF;
+  --color-text-main: #1E293B;
+
+  --font-sans: 'Inter', ui-sans-serif, system-ui, sans-serif, 'Apple Color Emoji', 'Segoe UI Emoji', 'Segoe UI Symbol', 'Noto Color Emoji';
+  --font-serif: 'Playfair Display', ui-serif, Georgia, Cambria, 'Times New Roman', Times, serif;
+}
+
+@layer base {
+  body {
+    @apply bg-content-bg text-text-main font-sans;
+  }
+}
