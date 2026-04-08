@@ -164,14 +164,14 @@ export const specialtiesData: Specialty[] = [
 ];
 
 export const hospitalsData: Hospital[] = [
-  { id: 'blida', name: 'CHU Blida', city: 'Blida', lat: 36.47, lng: 2.82, specialties: ['anap','anes','bio','cardio','chircard','chirneuro','chirortho','chirped','chirvisc','epidemio','gyneco','hemato','hemobio','imagerie','immuno','medtrav','medurg','medint','medleg','medphys','microbio','neuro','ophtalmo','orl','parasito','pediatrie','pharmaco'] },
+  { id: 'blida', name: 'CHU Blida (Frantz Fanon)', city: 'Blida', lat: 36.47, lng: 2.82, specialties: ['anap','anes','bio','cardio','chircard','chirneuro','chirortho','chirped','chirvisc','epidemio','gyneco','hemato','hemobio','imagerie','immuno','medtrav','medurg','medint','medleg','medphys','microbio','neuro','ophtalmo','orl','parasito','pediatrie','pharmaco'] },
   { id: 'douera', name: 'CHU Douéra', city: 'Douéra', lat: 36.66, lng: 2.82, specialties: ['anap','anes','chirmax','chirneuro','chirortho','chirped','chirvisc','epidemio','gyneco','medtrav','medurg','medint','medleg','medphys','pediatrie','rhumato'] },
   { id: 'hmru', name: 'HMRU Blida', city: 'Blida', lat: 36.47, lng: 2.82, specialties: ['anes','cardio','chirortho','chiruro','chirvisc','hepato','imagerie','medint','nephro','onco','ophtalmo','orl'] },
   { id: 'clcc', name: 'CLCC Blida (CAC)', city: 'Blida', lat: 36.47, lng: 2.82, specialties: ['anes','chirvisc','hemato','immuno','onco','radiotherapie'] },
   { id: 'tipaza', name: 'EHS Tipaza', city: 'Tipaza', lat: 36.59, lng: 2.82, specialties: ['cardio','chirvisc','epidemio','gyneco','pediatrie','pedopsy','psychiatrie'] },
   { id: 'tot', name: 'EHS TOT Blida', city: 'Blida', lat: 36.48, lng: 2.82, specialties: ['anes','chiruro','chirvasc','chirvisc','nephro'] },
   { id: 'sidi', name: 'EHS Sidi Ghiles', city: 'Tipaza', lat: 36.6, lng: 2.82, specialties: ['anes','chirmax','onco'] },
-  { id: 'psy', name: 'EHS Psychiatrie Blida', city: 'Blida', lat: 36.47, lng: 2.82, specialties: ['pedopsy','psychiatrie'] },
+  { id: 'psy', name: 'EHS Psychiatrie Blida (Frantz Fanon)', city: 'Blida', lat: 36.47, lng: 2.82, specialties: ['pedopsy','psychiatrie'] },
   { id: 'cherchel', name: 'EHS Cherchel', city: 'Tipaza', lat: 36.6, lng: 2.82, specialties: ['chirneuro','neuro'] },
   { id: 'trichine', name: 'EPH Trichine (Faroudja)', city: 'Blida', lat: 36.47, lng: 2.82, specialties: ['pneumo'] }
 ];
@@ -182,7 +182,7 @@ export const testimonialsData: Testimonial[] = [
     content: "The progress tracker is fantastic. It's motivating to see how much I've improved over time. The app has a great mix of challenging cases and theoretical depth, making my residency much more manageable.",
     authorName: "Dr. Amine",
     serviceName: "Cardiologie",
-    hospitalName: "CHU Blida",
+    hospitalName: "CHU Blida (Frantz Fanon)",
     rating: 4.9,
     year: "3ème année"
   },
@@ -191,7 +191,7 @@ export const testimonialsData: Testimonial[] = [
     content: "Mon expérience au sein de ce service a été fondamentalement transformatrice. Dès le premier jour, l'exigence clinique et la rigueur diagnostique qui y règnent m'ont poussé dans mes derniers retranchements intellectuels. L'équipe médicale ne fait aucune concession sur la qualité des soins, ce qui crée un environnement où l'apprentissage est constant et intense.\n\nLa diversité des pathologies cardiaques rencontrées ici est sans équivalent. Des urgences rythmiques complexes aux prises en charge au long cours de l'insuffisance cardiaque terminale, chaque garde est une occasion en or d'acquérir des réflexes vitaux. Les réunions de concertation pluridisciplinaire sont de véritables masterclasses où chaque décision thérapeutique est justifiée par les données les plus récentes de l'evidence-based medicine.\n\nIl faut cependant souligner que le rythme est extrêmement soutenu. Les nuits sont courtes, et la charge mentale liée aux patients critiques en réanimation cardiaque demande une résilience psychologique importante. Néanmoins, l'encadrement par les seniors reste bienveillant et structurant.\n\nEn résumé, c'est un tremplin exceptionnel pour quiconque souhaite embrasser la cardiologie moderne à bras-le-corps, à condition d'être prêt à un dévouement total pendant plusieurs années.",
     authorName: "Dr. Ryad",
     serviceName: "Cardiologie",
-    hospitalName: "CHU Blida",
+    hospitalName: "CHU Blida (Frantz Fanon)",
     rating: 5.0,
     year: "4ème année"
   },

@@ -43,7 +43,7 @@ export default function Admin() {
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                   <div>
                     <label className="block text-sm font-bold text-gray-700 mb-2">Nom de l'établissement</label>
-                    <input {...register('name', { required: true })} className="w-full px-5 py-3 bg-gray-50 border border-gray-200 rounded-xl focus:ring-2 focus:ring-brand-cyan focus:border-brand-cyan outline-none transition-all" placeholder="Ex: CHU Blida" />
+                    <input {...register('name', { required: true })} className="w-full px-5 py-3 bg-gray-50 border border-gray-200 rounded-xl focus:ring-2 focus:ring-brand-cyan focus:border-brand-cyan outline-none transition-all" placeholder="Ex: CHU Blida (Frantz Fanon)" />
                   </div>
                   <div>
                     <label className="block text-sm font-bold text-gray-700 mb-2">Ville</label>
